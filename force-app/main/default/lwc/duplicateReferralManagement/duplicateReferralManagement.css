@@ -1,0 +1,102 @@
+/* referralDuplicateViewer.css */
+
+.highlight-different {
+    background-color: #ffeaa7;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.slds-item__label {
+    font-weight: 600;
+    min-width: 120px;
+    display: inline-block;
+}
+
+.slds-item dd {
+    margin-left: 8px;
+    word-break: break-all;
+}
+
+/* Different value highlighting */
+.value-different {
+    background-color: #fff2cc;
+    border-left: 3px solid #f39c12;
+    padding-left: 8px;
+    margin-left: 4px;
+}
+
+.value-same {
+    padding-left: 8px;
+    margin-left: 4px;
+}
+
+/* Box styling for better visual separation */
+.slds-box {
+    border-radius: 6px;
+    border: 1px solid #d8dde6;
+}
+
+.slds-theme_default {
+    background-color: #f8f9fb;
+    border-color: #16325c;
+}
+
+.slds-theme_shade {
+    background-color: #fafafb;
+    border-color: #c23934;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .slds-item__label {
+        min-width: 100px;
+        font-size: 0.75rem;
+    }
+    
+    .slds-text-heading_medium {
+        font-size: 1rem;
+    }
+    
+    .slds-button-group .slds-button {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Enhanced visual indicators */
+.current-record-indicator {
+    border-left: 4px solid #4bca81;
+}
+
+.duplicate-record-indicator {
+    border-left: 4px solid #c23934;
+}
+
+/* Tooltip styling for field differences */
+.field-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.field-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background-color: #16325c;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.highlight-different {
+    background-color: #fff3cd; /* A light yellow highlight color */
+    font-weight: 600; /* Bold */
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid #ffeeba;
+}

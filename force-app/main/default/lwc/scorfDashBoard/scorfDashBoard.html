@@ -1,0 +1,65 @@
+<template>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="user-profile-card">
+                <div class="user-avatar">
+                    <lightning-icon icon-name="utility:user" size="large"></lightning-icon>
+                </div>
+                <div class="user-info">
+                    <h3 class="user-name">{userInfo.name}</h3>
+                    <p class="user-email">{userInfo.email}</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="navigation-menu">
+                <ul class="nav-list">
+                    <template for:each={navigation} for:item="item">
+                        <li key={item.key} class="nav-item">
+                            <a class={item.class} data-tab={item.key} onclick={handleNavigation}>
+                                <lightning-icon icon-name={item.icon} size="small"></lightning-icon>
+                                <span class="nav-label">{item.label}</span>
+                            </a>
+                        </li>
+                    </template>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <!-- Dashboard -->
+            <div if:true={isDashboardActive} class="content-section">
+                <c-display-dashboard></c-display-dashboard>
+            </div>
+
+            <!-- Projects -->
+            <div if:true={isProjectsActive} class="content-section">
+                <div class="content-header">
+                    <h2>Projects</h2>
+                </div>
+                <c-funding-application-table></c-funding-application-table>
+            </div>
+
+            <!-- Letters-->
+            <div if:true={isLettersActive} class="content-section">
+                <div class="content-header">
+                    <h2>Letter of Intent</h2>
+                </div>
+            </div>
+
+            <!-- Reports-->
+            <div if:true={isReportsActive} class="content-section">
+                <div class="content-header">
+                    <h2>Reports</h2>
+                </div>
+            </div>
+
+            <!-- Close Out Package-->
+            <div if:true={isCloseOutActive} class="content-section">
+                <div class="content-header">
+                    <h2>Close Out Package</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

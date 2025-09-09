@@ -1,0 +1,56 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header">
+            <h2 class="slds-card__header-title">
+                {cardTitle}
+            </h2>
+            <div class="slds-text-body_small slds-text-color_weak">
+                {partnerNumberDisplay}
+            </div>
+        </div>
+
+        <div class="slds-card__body">
+            <div class="slds-form">
+                <div class="slds-form-element slds-m-bottom_medium">
+                    <div class="slds-form-element__control">
+                        <lightning-input id="partner-name" name="Partner_Name__c" type="text"
+                            value={partnerData.Partner_Name__c} onchange={handleInputChange} required
+                            label=" Partner Name"
+                            placeholder="Enter partner organization name">
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <div class="slds-form-element slds-m-bottom_medium">
+                    <div class="slds-form-element__control">
+                        <lightning-textarea id="geographic-area" name="Geographic_Area_Population_Poverty__c"
+                            label="Geographic Area & Population"
+                            value={partnerData.Geographic_Area_Population_Poverty__c} onchange={handleInputChange}
+                            placeholder="Describe the geographic area and population this partner serves" rows="3">
+                        </lightning-textarea>
+                    </div>
+                </div>
+
+                <div class="slds-form-element slds-m-bottom_medium">
+                    <div class="slds-form-element__control">
+                        <lightning-textarea id="budget-funding" name="Describe_Current_Budget_and_Funding_Sour__c"
+                            value={partnerData.Describe_Current_Budget_and_Funding_Sour__c} onchange={handleInputChange}
+                            label="Describe the partner's current budget and funding sources"
+                            placeholder="Describe the partner's current budget and funding sources" rows="3">
+                        </lightning-textarea>
+                    </div>
+                </div>
+
+                <div class="slds-form-element slds-m-bottom_medium">
+                    <div class="slds-form-element__control">
+                        <lightning-textarea id="existing-efforts" name="Outline_Existing_Efforts_and_New_Expansi__c"
+                            value={partnerData.Outline_Existing_Efforts_and_New_Expansi__c} onchange={handleInputChange}
+                            label="Outline existing efforts and describe any new expansion plans"
+                            placeholder="Outline existing efforts and describe any new expansion plans" rows="4">
+                        </lightning-textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

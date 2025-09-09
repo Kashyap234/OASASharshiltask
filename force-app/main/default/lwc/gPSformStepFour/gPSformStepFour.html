@@ -1,0 +1,63 @@
+<template>
+    <div class="slds-theme_default slds-m-bottom_medium">
+        <div class="slds-text-heading_small slds-m-bottom_small">
+            Overall Budget
+        </div>
+
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input type="number" label="Total Project Budget" name="Total_Project_Budget__c"
+                    value={totalBudget}  step="0.01" min="0"
+                    formatter="currency" class="slds-m-bottom_small" disabled>
+                </lightning-input>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input type="number" label="Minus Estimated Carry Forward Amount"
+                    name="Minus_Estimated_Carry_Forward_Amount__c"
+                    value={formData.Minus_Estimated_Carry_Forward_Amount__c} onchange={handleInputChange} step="0.01"
+                    min="0" formatter="currency" class="slds-m-bottom_small" disabled={isFormDisabled}>
+                </lightning-input>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input type="number" label="Minus Estimated Interest Earned"
+                    name="Minus_Estimated_Interest_Earned__c" value={formData.Minus_Estimated_Interest_Earned__c}
+                    onchange={handleInputChange} step="0.01" min="0" formatter="currency" class="slds-m-bottom_small"
+                    disabled={isFormDisabled}>
+                </lightning-input>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input type="number" label="Total Amount Requested" value={totalAmountRequested}
+                    formatter="currency" read-only class="slds-m-bottom_small" disabled>
+                </lightning-input>
+            </div>
+        </div>
+    </div>
+
+    <div class="slds-theme_default slds-m-bottom_medium">
+        <div class="slds-text-heading_small slds-m-bottom_small">
+            Certifications of Contents
+        </div>
+        <p class="slds-m-bottom_small">
+            By signing below, you certify that all information in this application is true and accurate to the best of
+            your knowledge.
+        </p>
+
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input type="text" label="Electronic Signature" name="Electronic_Signature__c"
+                    value={formData.Electronic_Signature__c} onchange={handleInputChange} class="slds-m-bottom_small"
+                    disabled={isFormDisabled} required
+                    message-when-value-missing="Electronic Signature is required to submit.">
+                </lightning-input>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input type="date" label="Date" name="Date__c" value={formData.Date__c}
+                    onchange={handleInputChange} class="slds-m-bottom_small" disabled="true">
+                </lightning-input>
+            </div>
+        </div>
+    </div>
+</template>

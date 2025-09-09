@@ -1,0 +1,420 @@
+<template>
+    <div class="section-container">
+        <h2 class="section-main-title">Core Strategies</h2>
+        <div class="strategies-container">
+            <template for:each={coreStrategyOptions} for:item="coreStrategy">
+                <div key={coreStrategy.value} class="strategy-section">
+
+                    <div class="core-strategy-card" onclick={handleCoreStrategyClick}
+                        data-strategy-value={coreStrategy.value}>
+                        <div class={coreStrategy.headerClass}>
+                            <span class="strategy-label">{coreStrategy.label}</span>
+                            <template if:true={coreStrategy.isSelected}><span
+                                    class="selected-indicator">✓</span></template>
+                            <template if:true={coreStrategy.isExpanded}><span class="expand-icon">▼</span></template>
+                            <template if:false={coreStrategy.isExpanded}><span class="expand-icon">▶</span></template>
+                        </div>
+                    </div>
+
+                    <template if:true={coreStrategy.isExpanded}>
+                        <div class="strategy-details-accordion">
+                            <div class="abatement-strategies-container">
+                                <div class="abatement-header">
+                                    <h3 class="abatement-title">Abatement Strategies</h3>
+                                </div>
+                                <div class="abatement-list">
+                                    <template for:each={coreStrategy.filteredAbatementOptions} for:item="option">
+                                        <div key={option.value} class={option.itemClass}
+                                            onclick={handleCoreAbatementClick} data-strategy-value={coreStrategy.value}
+                                            data-option-value={option.value}>
+                                            <span class="abatement-label">{option.label}</span>
+                                            <template if:true={option.isSelected}>
+                                                <button class="clear-btn" onclick={handleClearCoreAbatement}
+                                                    data-strategy-value={coreStrategy.value}
+                                                    data-option-value={option.value} title="Clear">
+                                                    <lightning-icon icon-name="utility:close"
+                                                        size="xx-small"></lightning-icon> Clear
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <template for:each={coreStrategy.filteredAbatementOptions} for:item="option">
+                                <template if:true={option.isSelected}>
+                                    <div key={option.value} class="strategy-form-container">
+                                        <div class="strategy-form-header">
+                                            <h4 class="strategy-form-title">Strategy Details: {option.label}</h4>
+                                        </div>
+                                        <div class="strategy-form-section">
+                                            <div class="form-row">
+                                                <div class="form-field">
+                                                    <label class="form-label">Budget Amount</label>
+                                                    <lightning-input type="number" formatter="currency" step="0.01"
+                                                        value={option.strategyFormData.budgetAmount}
+                                                        onchange={handleStrategyFieldChangeWithValidation}
+                                                        data-field="budgetAmount" data-strategy={option.value}>
+                                                    </lightning-input>
+                                                </div>
+                                                <div class="form-field">
+                                                    <label class="form-label">Is your Strategy
+                                                        Initial/Continuation?</label>
+                                                    <lightning-combobox options={initialContinuationOptions}
+                                                        value={option.strategyFormData.isInitialContinuation}
+                                                        onchange={handleStrategyFieldChange}
+                                                        data-field="isInitialContinuation"
+                                                        data-strategy={option.value}></lightning-combobox>
+                                                </div>
+                                            </div>
+                                            <div class="form-field">
+                                                <label class="form-label">Budget Narrative</label>
+                                                <lightning-textarea value={option.strategyFormData.budgetNarrative}
+                                                    onchange={handleStrategyFieldChange} data-field="budgetNarrative"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                            <div class="form-field">
+                                                <label class="form-label">Implementation Plan for the Strategy</label>
+                                                <lightning-textarea value={option.strategyFormData.implementationPlan}
+                                                    onchange={handleStrategyFieldChange} data-field="implementationPlan"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                            <div class="form-field">
+                                                <label class="form-label">Provide the Outcome Measures</label>
+                                                <lightning-textarea value={option.strategyFormData.outcomeMeasures}
+                                                    onchange={handleStrategyFieldChange} data-field="outcomeMeasures"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                            <div class="form-field">
+                                                <label class="form-label">Provide the Process Measures</label>
+                                                <lightning-textarea value={option.strategyFormData.processMeasures}
+                                                    onchange={handleStrategyFieldChange} data-field="processMeasures"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="strategy-form-section">
+                                            <div class="section-header">
+                                                <h5 class="section-title">Section 1: Personnel Information</h5>
+                                                <button class="add-row-btn" onclick={handleAddPersonnel}
+                                                    data-strategy={option.value}>
+                                                    <lightning-icon icon-name="utility:add"
+                                                        size="x-small"></lightning-icon> Add Personnel
+                                                </button>
+                                            </div>
+                                            <template for:each={option.personnelData} for:item="personnel">
+                                                <div key={personnel.id} class="personnel-row horizontal-row">
+                                                    <div class="form-field">
+                                                            <lightning-input type="text" label="Name"
+                                                            value={personnel.name} onchange={handlePersonnelFieldChange}
+                                                            data-field="name" data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                            <lightning-input label="Position"
+                                                            type="text" value={personnel.position}
+                                                            onchange={handlePersonnelFieldChange} data-field="position"
+                                                            data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                            <lightning-input type="number" label="Annual Salary"
+                                                            formatter="currency" step="0.01" value={personnel.salary}
+                                                            onchange={handlePersonnelFieldChange} data-field="salary"
+                                                            data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                            <lightning-input type="text" label="Level of Effort"
+                                                            value={personnel.effort}
+                                                            onchange={handlePersonnelFieldChange} data-field="effort"
+                                                            data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <lightning-input label="Total Charged" type="number" formatter="currency" step="0.01"
+                                                            value={personnel.total}
+                                                            onchange={handlePersonnelFieldChangeWithValidation}
+                                                            data-field="total" data-strategy={option.value}
+                                                            data-id={personnel.id}>
+                                                        </lightning-input>
+                                                    </div>
+
+                                                    <template if:true={personnel.isRemovable}>
+                                                        <button class="remove-row-btn" onclick={handleRemovePersonnel}
+                                                            data-strategy={option.value} data-id={personnel.id}>
+                                                            <lightning-icon icon-name="utility:delete"
+                                                                size="x-small"></lightning-icon> Remove
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <div class="strategy-form-section">
+                                            <div class="section-header">
+                                                <h5 class="section-title">Section 2: Budget Information</h5>
+                                                <button class="add-row-btn" onclick={handleAddBudget}
+                                                    data-strategy={option.value}>
+                                                    <lightning-icon icon-name="utility:add"
+                                                        size="x-small"></lightning-icon> Add Budget Item
+                                                </button>
+                                            </div>
+                                            <template for:each={option.budgetData} for:item="budget">
+                                                <div key={budget.id} class="budget-row horizontal-row">
+                                                    <div class="form-field">
+                                                            <lightning-input type="text"
+                                                            label="Item"
+                                                            value={budget.item} onchange={handleBudgetFieldChange}
+                                                            data-field="item" data-strategy={option.value}
+                                                            data-id={budget.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                            <lightning-input
+                                                            label="Purpose"
+                                                            type="text" value={budget.purpose}
+                                                            onchange={handleBudgetFieldChange} data-field="purpose"
+                                                            data-strategy={option.value}
+                                                            data-id={budget.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                            <lightning-input label="Calculation"
+                                                            type="text" value={budget.calculation}
+                                                            onchange={handleBudgetFieldChange} data-field="calculation"
+                                                            data-strategy={option.value}
+                                                            data-id={budget.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                            <lightning-input type="number" label="Total Charged"
+                                                            formatter="currency" step="0.01" value={budget.total}
+                                                            onchange={handleBudgetFieldChangeWithValidation}
+                                                            data-field="total" data-strategy={option.value}
+                                                            data-id={budget.id}>
+                                                        </lightning-input>
+                                                    </div>
+
+                                                    <template if:true={budget.isRemovable}>
+                                                        <button class="remove-row-btn" onclick={handleRemoveBudget}
+                                                            data-strategy={option.value} data-id={budget.id}>
+                                                            <lightning-icon icon-name="utility:delete"
+                                                                size="x-small"></lightning-icon> Remove
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <div class="section-container">
+        <h2 class="section-main-title">Approved Uses</h2>
+        <div class="strategies-container">
+            <template for:each={approvedUseOptions} for:item="approvedUse">
+                <div key={approvedUse.value} class="strategy-section">
+
+                    <div class="core-strategy-card" onclick={handleApprovedUseClick}
+                        data-strategy-value={approvedUse.value}>
+                        <div class={approvedUse.headerClass}>
+                            <span class="strategy-label">{approvedUse.label}</span>
+                            <template if:true={approvedUse.isSelected}><span
+                                    class="selected-indicator">✓</span></template>
+                            <template if:true={approvedUse.isExpanded}><span class="expand-icon">▼</span></template>
+                            <template if:false={approvedUse.isExpanded}><span class="expand-icon">▶</span></template>
+                        </div>
+                    </div>
+
+                    <template if:true={approvedUse.isExpanded}>
+                        <div class="strategy-details-accordion">
+                            <div class="abatement-strategies-container">
+                                <div class="abatement-header">
+                                    <h3 class="abatement-title">Approved Abatement Strategies</h3>
+                                </div>
+                                <div class="abatement-list">
+                                    <template for:each={approvedUse.filteredAbatementOptions} for:item="option">
+                                        <div key={option.value} class={option.itemClass}
+                                            onclick={handleApprovedAbatementClick}
+                                            data-strategy-value={approvedUse.value} data-option-value={option.value}>
+                                            <span class="abatement-label">{option.label}</span>
+                                            <template if:true={option.isSelected}>
+                                                <button class="clear-btn" onclick={handleClearApprovedAbatement}
+                                                    data-strategy-value={approvedUse.value}
+                                                    data-option-value={option.value} title="Clear">
+                                                    <lightning-icon icon-name="utility:close"
+                                                        size="xx-small"></lightning-icon> Clear
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <template for:each={approvedUse.filteredAbatementOptions} for:item="option">
+                                <template if:true={option.isSelected}>
+                                    <div key={option.value} class="strategy-form-container">
+                                        <div class="strategy-form-header">
+                                            <h4 class="strategy-form-title">Strategy Details: {option.label}</h4>
+                                        </div>
+                                        <div class="strategy-form-section">
+                                            <div class="form-row">
+                                                <div class="form-field">
+                                                    <lightning-input label="Budget Amount" type="number" formatter="currency" step="0.01"
+                                                        value={option.strategyFormData.budgetAmount}
+                                                        onchange={handleStrategyFieldChangeWithValidation}
+                                                        data-field="budgetAmount" data-strategy={option.value}>
+                                                    </lightning-input>
+                                                </div>
+                                                <div class="form-field">
+                                                    <lightning-combobox label="Is your Strategy
+                                                        Initial/Continuation?" options={initialContinuationOptions}
+                                                        value={option.strategyFormData.isInitialContinuation}
+                                                        onchange={handleStrategyFieldChange}
+                                                        data-field="isInitialContinuation"
+                                                        data-strategy={option.value}></lightning-combobox>
+                                                </div>
+                                            </div>
+                                            <div class="form-field">
+                                                <lightning-textarea label="Budget Narrative" value={option.strategyFormData.budgetNarrative}
+                                                    onchange={handleStrategyFieldChange} data-field="budgetNarrative"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                            <div class="form-field">
+                                                <!-- <label class="form-label"></label> -->
+                                                <lightning-textarea label="Implementation Plan for the Strategy" value={option.strategyFormData.implementationPlan}
+                                                    onchange={handleStrategyFieldChange} data-field="implementationPlan"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                            <div class="form-field">
+                                                <!-- <label class="form-label">Provide the Outcome Measures</label> -->
+                                                <lightning-textarea label="Provide the Outcome Measures" value={option.strategyFormData.outcomeMeasures}
+                                                    onchange={handleStrategyFieldChange} data-field="outcomeMeasures"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                            <div class="form-field">
+                                                <!-- <label class="form-label">Provide the Process Measures</label> -->
+                                                <lightning-textarea label="Provide the Process Measures" value={option.strategyFormData.processMeasures}
+                                                    onchange={handleStrategyFieldChange} data-field="processMeasures"
+                                                    data-strategy={option.value} rows="3"></lightning-textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="strategy-form-section">
+                                            <div class="section-header">
+                                                <h5 class="section-title">Section 1: Personnel Information</h5>
+                                                <button class="add-row-btn" onclick={handleAddPersonnel}
+                                                    data-strategy={option.value}>
+                                                    <lightning-icon icon-name="utility:add"
+                                                        size="x-small"></lightning-icon> Add Personnel
+                                                </button>
+                                            </div>
+                                            <template for:each={option.personnelData} for:item="personnel">
+                                                <div key={personnel.id} class="personnel-row horizontal-row">
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Name</label> -->
+                                                            <lightning-input type="text" label="Name"
+                                                            value={personnel.name} onchange={handlePersonnelFieldChange}
+                                                            data-field="name" data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Position</label> -->
+                                                            <lightning-input label="Position"
+                                                            type="text" value={personnel.position}
+                                                            onchange={handlePersonnelFieldChange} data-field="position"
+                                                            data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Annual Salary</label> -->
+                                                        <lightning-input type="number" label="Annual Salary"
+                                                            formatter="currency" step="0.01" value={personnel.salary}
+                                                            onchange={handlePersonnelFieldChange} data-field="salary"
+                                                            data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Level of Effort</label> -->
+                                                        <lightning-input type="text" label="Level of Effort"
+                                                            value={personnel.effort}
+                                                            onchange={handlePersonnelFieldChange} data-field="effort"
+                                                            data-strategy={option.value}
+                                                            data-id={personnel.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Total Charged</label> -->
+                                                            <lightning-input type="number" label="Total Charged"
+                                                            formatter="currency" step="0.01" value={personnel.total}
+                                                            onchange={handlePersonnelFieldChangeWithValidation}
+                                                            data-field="total" data-strategy={option.value}
+                                                            data-id={personnel.id}>
+                                                        </lightning-input></div>
+
+                                                    <template if:true={personnel.isRemovable}>
+                                                        <button class="remove-row-btn" onclick={handleRemovePersonnel}
+                                                            data-strategy={option.value} data-id={personnel.id}>
+                                                            <lightning-icon icon-name="utility:delete"
+                                                                size="x-small"></lightning-icon> Remove
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <div class="strategy-form-section">
+                                            <div class="section-header">
+                                                <h5 class="section-title">Section 2: Budget Information</h5>
+                                                <button class="add-row-btn" onclick={handleAddBudget}
+                                                    data-strategy={option.value}>
+                                                    <lightning-icon icon-name="utility:add"
+                                                        size="x-small"></lightning-icon> Add Budget Item
+                                                </button>
+                                            </div>
+                                            <template for:each={option.budgetData} for:item="budget">
+                                                <div key={budget.id} class="budget-row horizontal-row">
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Item</label> -->
+                                                        <lightning-input type="text" label="Item"
+                                                            value={budget.item} onchange={handleBudgetFieldChange}
+                                                            data-field="item" data-strategy={option.value}
+                                                            data-id={budget.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Purpose</label> -->
+                                                            <lightning-input label="Purpose"
+                                                            type="text" value={budget.purpose}
+                                                            onchange={handleBudgetFieldChange} data-field="purpose"
+                                                            data-strategy={option.value}
+                                                            data-id={budget.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Calculation</label> -->
+                                                        <lightning-input label="Calculation"
+                                                            type="text" value={budget.calculation}
+                                                            onchange={handleBudgetFieldChange} data-field="calculation"
+                                                            data-strategy={option.value}
+                                                            data-id={budget.id}></lightning-input></div>
+                                                    <div class="form-field">
+                                                        <!-- <label class="form-label">Total Charged</label> -->
+                                                        <lightning-input type="number" label="Total Charged"
+                                                            formatter="currency" step="0.01" value={budget.total}
+                                                            onchange={handleBudgetFieldChangeWithValidation}
+                                                            data-field="total" data-strategy={option.value}
+                                                            data-id={budget.id}>
+                                                        </lightning-input>
+                                                    </div>
+
+                                                    <template if:true={budget.isRemovable}>
+                                                        <button class="remove-row-btn" onclick={handleRemoveBudget}
+                                                            data-strategy={option.value} data-id={budget.id}>
+                                                            <lightning-icon icon-name="utility:delete"
+                                                                size="x-small"></lightning-icon> Remove
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

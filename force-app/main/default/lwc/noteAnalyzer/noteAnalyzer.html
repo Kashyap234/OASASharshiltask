@@ -1,0 +1,63 @@
+<template>
+    <lightning-card title="Note Analysis" icon-name="standard:document">
+        <div class="slds-card__body slds-card__body_inner">
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-around_medium">
+                    <lightning-spinner alternative-text="Loading notes..."></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error Message -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    <h2>Error loading notes: {error}</h2>
+                </div>
+            </template>
+
+            <!-- Summary Alert -->
+            <template if:true={hasNotesWithMatches}>
+                <div class={alertClass}>
+                    <div class="slds-notify__content">
+                        <h2 class="slds-text-heading_small">{alertMessage}</h2>
+                        <p>Total keyword matches: {totalMatches}</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Notes List - Only Notes with Keyword Matches -->
+            <template if:true={hasNotesWithMatches}>
+                <div class="slds-p-top_medium">
+                    <template for:each={notesWithMatches} for:item="note">
+                        <div key={note.noteId} class="slds-box slds-m-bottom_small">
+                            <div class="slds-grid slds-grid_align-spread">
+                                <div>
+                                    <h3 class="slds-text-heading_small">{note.title}</h3>
+                                    <template if:true={note.hasMatches}>
+                                        <p class="slds-text-body_small slds-text-color_error">
+                                            <strong>Keywords Found:</strong> {note.matchedWordsString}
+                                        </p>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- No Matches Message -->
+            <template if:false={hasNotesWithMatches}>
+                <template if:false={isLoading}>
+                    <template if:false={error}>
+                        <div class="slds-align_absolute-center slds-p-around_large">
+                            <lightning-icon icon-name="utility:success" size="large" class="slds-text-color_success"></lightning-icon>
+                            <div class="slds-text-heading_medium slds-m-top_small">No Keywords Found</div>
+                        </div>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

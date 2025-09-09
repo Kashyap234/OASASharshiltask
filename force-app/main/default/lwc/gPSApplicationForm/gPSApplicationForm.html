@@ -1,0 +1,189 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header">
+            <h2 class="slds-card__header-title">
+                GPS Funding Application
+            </h2>
+            <div class="slds-text-body_small slds-text-color_weak">
+                <template if:true={partnersCount}>
+                    {partnersCount} partner(s) added
+                </template>
+            </div>
+        </div>
+
+        <div class="slds-card__body">
+            <div class="slds-m-bottom_medium">
+                <lightning-progress-bar value={progressPercentage} size="medium"></lightning-progress-bar>
+                <div class="slds-text-align_center slds-m-top_x-small">
+                    Step {currentStep} of {totalSteps}
+                </div>
+            </div>
+
+            <template if:true={hasPartners}>
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <div class="slds-text-heading_small slds-m-bottom_small">
+                        Added Partners ({partnersCount})
+                    </div>
+                    <template for:each={partners} for:item="partner">
+                        <div key={partner.Id}
+                            class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_x-small">
+                            <div class="slds-col slds-text-body_small">
+                                <strong>Partner #{partner.Id}:</strong> {partner.Partner_Name__c}
+                                <template if:true={partner.Geographic_Area_Population_Poverty__c}>
+                                    <div class="slds-text-color_weak">
+                                        Area: {partner.Geographic_Area_Population_Poverty__c}
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="slds-col slds-no-flex">
+                                <template if:true={isStep3OrLater}>
+                                    <lightning-button-icon icon-name="utility:edit" variant="border-filled"
+                                        alternative-text="Edit Partner" title="Edit Partner" onclick={handleEditPartner}
+                                        data-partner-id={partner.Id} class="slds-m-right_xx-small">
+                                    </lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:delete" variant="border-filled"
+                                        alternative-text="Delete Partner" title="Delete Partner"
+                                        onclick={handleDeletePartner} data-partner-id={partner.Id}>
+                                    </lightning-button-icon>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Step 1 -->
+            <template if:true={isStep1}>
+                <c-g-p-sform-step-one form-data={formData} errors={errors} uploaded-files={uploadedFiles}
+                    oninputchange={handleInputChange} onfilesuploaded={handleUploadFinished}
+                    onfiledeleted={handleDeleteFile} onvalidate={handleValidate}>
+                </c-g-p-sform-step-one>
+            </template>
+
+            <!-- Step 2 -->
+            <template if:true={isStep2}>
+                <c-g-p-sform-step-two partner-number={currentPartnerNumber} partner-data={currentPartnerData}
+                    is-editing={isEditingExistingPartner} step-title={stepTwoTitle}
+                    onpartnerchange={handlePartnerChange}>
+                </c-g-p-sform-step-two>
+            </template>
+
+            <!-- Step 3 -->
+            <template if:true={isStep3}>
+                <div class="slds-card">
+                    <div class="slds-card__header">
+                        <h2 class="slds-card__header-title">
+                            Review Partners & Continue
+                        </h2>
+                    </div>
+                    <div class="slds-card__body">
+                        <template if:true={hasActivePartner}>
+                            <div class="slds-box slds-theme_success slds-m-bottom_medium">
+                                <div class="slds-text-heading_small slds-m-bottom_small">
+                                    <lightning-icon icon-name="utility:success" size="x-small"
+                                        class="slds-m-right_x-small"></lightning-icon>
+                                    Recently Added/Updated Partner
+                                </div>
+                                <div class="slds-text-body_regular">
+                                    <strong>Partner Name:</strong> {activePartnerData.Partner_Name__c}
+                                </div>
+                                <template if:true={activePartnerData.Geographic_Area_Population_Poverty__c}>
+                                    <div class="slds-text-body_regular slds-m-top_x-small">
+                                        <strong>Geographic Area:</strong>
+                                        {activePartnerData.Geographic_Area_Population_Poverty__c}
+                                    </div>
+                                </template>
+                                <template if:true={activePartnerData.Describe_Current_Budget_and_Funding_Sour__c}>
+                                    <div class="slds-text-body_regular slds-m-top_x-small">
+                                        <strong>Budget & Funding:</strong>
+                                        {activePartnerData.Describe_Current_Budget_and_Funding_Sour__c}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <c-g-p-sform-step-three ondatachange={handleStrategiesDataChange}
+                    onstrategyselected={handleStrategySelected}>
+                </c-g-p-sform-step-three>
+            </template>
+
+            <!-- Step 4 -->
+            <template if:true={isStep4}>
+                <c-g-p-sform-step-four form-data={formData} total-amount-requested={totalAmountRequested} 
+                    is-form-disabled={isFormDisabled} oninputchange={handleInputChange} partners={partners}>
+                </c-g-p-sform-step-four>
+            </template>
+
+            <template if:true={isPreviewOpen}>
+                <c-gps-preview-modal form-data={formData} partners={partners} uploaded-files={uploadedFiles}
+                    total-amount-requested={totalAmountRequested} onclose={handleClosePreview}>
+                </c-gps-preview-modal>
+            </template>
+        </div>
+
+        <div class="slds-card__footer ">
+            <div class="slds-grid slds-grid_align-spread">
+                <div class="slds-col slds-grid slds-gutters_x-small">
+                    <template if:false={isFirstStep}>
+                        <lightning-button variant="neutral" label="Previous" onclick={handlePrevious}
+                            disabled={isLoading}>
+                        </lightning-button>
+                    </template>
+
+                    <template if:true={isStep2and4Disabled}>
+                        <lightning-button variant="neutral" label="Save & Exit"
+                        title="Save your progress as a draft and exit the application" onclick={handleSaveAndExit}
+                        disabled={isLoading} class="slds-m-left_x-small">
+                    </lightning-button>
+                </template>
+                    
+                </div>  
+
+                <div class="slds-col slds-text-align_right">
+                    <template if:true={isStep3}>
+                        <div class="slds-m-bottom_medium">
+                            <lightning-button variant="brand" label="Add Another Partner"
+                                onclick={handleAddPartnerFromStep3} disabled={isLoading} icon-name="utility:add">
+                            </lightning-button>
+                        </div>
+                    </template>
+
+                    <template if:false={isLastStep}>
+                        <template if:true={isStep3}>
+                            <template if:false={hasPartners}>
+                                <lightning-button variant="neutral" label="Next" onclick={handleNext} disabled="true"
+                                    title="Please add at least one partner before proceeding">
+                                </lightning-button>
+                            </template>
+                            <template if:true={hasPartners}>
+                                <lightning-button variant="brand" label="Next" onclick={handleNext}
+                                    disabled={isLoading}>
+                                </lightning-button>
+                            </template>
+                        </template>
+                        <template if:false={isStep3}>
+                            <lightning-button variant="brand" label="Next" onclick={handleNext} disabled={isLoading}>
+                            </lightning-button>
+                        </template>
+                    </template>
+
+                    <template if:true={isLastStep}>
+                        <lightning-button variant="neutral" label="Preview" title="Preview the complete application"
+                            onclick={handlePreview} disabled={isLoading} class="slds-m-left_x-small">
+                        </lightning-button>
+
+                        <lightning-button variant="brand" label="Finish Application" onclick={handleFinishApplication}
+                            disabled={isLoading} class="slds-button_success">
+                        </lightning-button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

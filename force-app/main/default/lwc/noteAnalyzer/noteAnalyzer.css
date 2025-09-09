@@ -1,0 +1,54 @@
+.importance-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.importance-badge[data-level="HIGH"] {
+    background-color: #c23934;
+    color: white;
+}
+
+.importance-badge[data-level="MEDIUM"] {
+    background-color: #ff6900;
+    color: white;
+}
+
+.importance-badge[data-level="LOW"] {
+    background-color: #0176d3;
+    color: white;
+}
+
+.importance-badge[data-level="NONE"] {
+    background-color: #706e6b;
+    color: white;
+}
+
+.alert-high {
+    background-color: #fef7f7;
+    border: 1px solid #c23934;
+    border-left: 4px solid #c23934;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-medium {
+    background-color: #fef8f3;
+    border: 1px solid #ff6900;
+    border-left: 4px solid #ff6900;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-low {
+    background-color: #f3f9ff;
+    border: 1px solid #0176d3;
+    border-left: 4px solid #0176d3;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}

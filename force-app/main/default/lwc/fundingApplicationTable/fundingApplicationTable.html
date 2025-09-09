@@ -1,0 +1,41 @@
+<template>
+    <lightning-card title="Funding Applications" icon-name="standard:custom_notification">
+        <div slot="actions">
+            <lightning-button label="New" onclick={handleNewClick} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button-icon icon-name="utility:refresh" alternative-text="Refresh" title="Refresh"
+                onclick={handleRefresh}></lightning-button-icon>
+        </div>
+
+        <div class="slds-m-around_medium">
+            <template if:true={isLoading}>
+                <div class="slds-is-relative slds-p-around_large">
+                    <lightning-spinner alternative-text="Loading..." variant="brand"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+                <template if:true={data}>
+                    <lightning-datatable key-field="Id" data={data} columns={columns} onrowaction={handleRowAction}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                </template>
+            </template>
+
+            <template if:true={showEmptyState}>
+                <div class="slds-align_absolute-center slds-p-around_large slds-text-align_center">
+                    <div class="slds-illustration slds-illustration_small" aria-hidden="true">
+                        <img src="/_slds/images/illustrations/empty-state-tasks.svg" alt="No Applications Found">
+                    </div>
+                    <h3 class="slds-text-heading_small slds-m-top_medium">No Applications Found</h3>
+                    <p class="slds-m-top_small">Click the "New" button to create a funding application.</p>
+                </div>
+            </template>
+        </div>
+
+        <template if:true={showModal}>
+            <c-gps-preview-modal form-data={formData} partners={partners} uploaded-files={uploadedFiles}
+                total-amount-requested={totalAmountRequested} onclose={handleClosePreview}>
+            </c-gps-preview-modal>
+        </template>
+    </lightning-card>
+</template>

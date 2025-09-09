@@ -1,0 +1,315 @@
+<template>
+    <!-- Organization Information -->
+    <div class="slds-card__body slds-card__body_inner">
+        <h2 class="slds-text-heading_medium slds-m-bottom_medium">Organization Information</h2>
+
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="SCEIS_Vendor_Number__c" label="SCEIS Vendor Number"
+                    value={formData.SCEIS_Vendor_Number__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    message-when-pattern-mismatch="Please enter a valid SCEIS Vendor Number"
+                    data-field="SCEIS_Vendor_Number__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="Does_Entity_Approve_Line_Items__c"
+                    label="Does the requesting Entity approves line-item servability throughout the technical Approval?"
+                    value={formData.Does_Entity_Approve_Line_Items__c} options={yesNoOptions}
+                    onchange={handleInputChange} data-field="Does_Entity_Approve_Line_Items__c">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="Entity_Type__c" label="Entity Type" value={formData.Entity_Type__c}
+                    options={entityTypeOptions} onchange={handleInputChange} onblur={handleFieldBlur} required
+                    message-when-value-missing="Entity Type is required" data-field="Entity_Type__c">
+                </lightning-combobox>
+            </div>
+
+            <template if:true={isEntityTypeOther}>
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-input name="Please_Specify_Other_Entity_Type__c"
+                        label="If you selected Other above, please specify entity SSP"
+                        value={formData.Please_Specify_Other_Entity_Type__c} onchange={handleInputChange}
+                        onblur={handleFieldBlur} required message-when-value-missing="Please specify the entity type"
+                        data-field="Please_Specify_Other_Entity_Type__c">
+                    </lightning-input>
+                </div>
+            </template>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="Name_of_Person_Completing_Form__c" label="Name of Person Completing Form"
+                    value={formData.Name_of_Person_Completing_Form__c} onchange={handleInputChange}
+                    onblur={handleFieldBlur} required
+                    message-when-value-missing="Name of Person Completing Form is required"
+                    message-when-pattern-mismatch="Please enter a valid name" pattern="^[a-zA-Z\s\-'\.]+$"
+                    data-field="Name_of_Person_Completing_Form__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="Collaborating_with_Other_GPS_Entity__c"
+                    label="Are you collaborating with any other GPS?"
+                    value={formData.Collaborating_with_Other_GPS_Entity__c} options={yesNoOptions}
+                    onchange={handleInputChange} data-field="Collaborating_with_Other_GPS_Entity__c">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <template if:true={isCollaboratingOtherGPS}>
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-dual-listbox name="Please_select_the_appropriate_county__c"
+                        label="If so, please select the county from the list?" source-label="Available Counties"
+                        selected-label="Selected Counties" options={countyOptions}
+                        value={formData.Please_select_the_appropriate_county__c} onchange={handleInputChange}
+                        data-field="Please_select_the_appropriate_county__c">
+                    </lightning-dual-listbox>
+                </div>
+            </template>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="Is_Entity_an_SC_Bellwether_Plaintiff__c"
+                    label="Is the requesting Entity a South Carolina Bellwether Plaintiff?"
+                    value={formData.Is_Entity_an_SC_Bellwether_Plaintiff__c} options={yesNoOptions}
+                    onchange={handleInputChange} data-field="Is_Entity_an_SC_Bellwether_Plaintiff__c">
+                </lightning-combobox>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="Was_the_requesting_Entity_a_litigating_s__c"
+                    label="Was the requesting Entity a litigating subdivision?"
+                    value={formData.Was_the_requesting_Entity_a_litigating_s__c} options={yesNoOptions}
+                    onchange={handleInputChange} data-field="Was_the_requesting_Entity_a_litigating_s__c">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="Any_Potential_Conflict_with_SC_Recovery__c"
+                    label="Does the requesting Entity, or any of its board members or employees, have any personal, financial, or other relationship with any Member of the SC Opioid Recovery Fund Board that may reasonably be viewed as a conflict of interest for that Member?"
+                    value={formData.Any_Potential_Conflict_with_SC_Recovery__c} options={yesNoOptions}
+                    onchange={handleInputChange} data-field="Any_Potential_Conflict_with_SC_Recovery__c">
+                </lightning-combobox>
+            </div>
+
+            <template if:true={isPotentialConflictYes}>
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-textarea name="Identify_the_Board_member_and_Relation__c"
+                        label="If yes, please identify the SCORF Board member and the relationship"
+                        value={formData.Identify_the_Board_member_and_Relation__c} onchange={handleInputChange}
+                        onblur={handleFieldBlur} maxlength="255" required
+                        message-when-value-missing="Please identify the Board member and relationship"
+                        message-when-too-long="Maximum 255 characters allowed"
+                        data-field="Identify_the_Board_member_and_Relation__c">
+                    </lightning-textarea>
+                </div>
+            </template>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-1">
+
+                <template if:false={uploadedFilesLen}>
+                    <lightning-file-upload label="Upload Authorization Letter" name="authorizationLetter"
+                        record-id={myRecordId} onuploadfinished={handleUploadFinished}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.txt,.png">
+                    </lightning-file-upload>
+                </template>
+
+                <template if:true={uploadedFiles}>
+                    <template for:each={uploadedFiles} for:item="uploadedFile">
+                        <div key={uploadedFile.documentId} class="slds-m-top_small">
+                            <div class="slds-media slds-media_center">
+                                <div class="slds-media__figure">
+                                    <lightning-icon icon-name="doctype:attachment" size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <p class="slds-text-body_regular">{uploadedFile.name}</p>
+                                    <p class="slds-text-body_small slds-text-color_weak">
+                                        {uploadedFile.size} • Uploaded {uploadedFile.uploadDate}
+                                    </p>
+                                </div>
+                                <div class="slds-media__figure slds-media__figure_reverse">
+                                    <lightning-button-icon icon-name="utility:delete" variant="bare"
+                                        onclick={handleDeleteFile} data-id={uploadedFile.documentId} title="Delete file"
+                                        alternative-text="Delete file">
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Remit To (As Per SCEIS) -->
+    <div class="slds-card__body slds-card__body_inner">
+        <h2 class="slds-text-heading_medium slds-m-bottom_medium">Payment Remit To (As Per SCEIS)</h2>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="Address_Line_1__c" label="Payment Address Line 1"
+                    value={formData.Address_Line_1__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    message-when-pattern-mismatch="Please enter a valid address" data-field="Address_Line_1__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="Address_Line_2__c" label="Payment Address Line 2"
+                    value={formData.Address_Line_2__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    data-field="Address_Line_2__c">
+                </lightning-input>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="City__c" label="Payment City" value={formData.City__c}
+                    onchange={handleInputChange} onblur={handleFieldBlur} pattern="^[a-zA-Z\s\-'\.]+$"
+                    message-when-pattern-mismatch="Please enter a valid city name" data-field="City__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="State__c" label="Payment State" value={formData.State__c}
+                    options={stateOptions} onchange={handleInputChange} data-field="State__c">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="Zip__c" label="Payment ZIP Code" value={formData.Zip__c}
+                    onchange={handleInputChange} onblur={handleFieldBlur} maxlength="10" pattern="^\d{5}(-\d{4})?$"
+                    message-when-pattern-mismatch="Please enter a valid ZIP code (12345 or 12345-6789)"
+                    data-field="Zip__c">
+                </lightning-input>
+            </div>
+        </div>
+    </div>
+
+    <!-- Political Subdivision Address (GPS) -->
+    <div class="slds-card__body slds-card__body_inner">
+        <h2 class="slds-text-heading_medium slds-m-bottom_medium">Political Subdivision Address (GPS)</h2>
+
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="OrganizationAddressLine1__c" label="Organization Address Line 1"
+                    value={formData.OrganizationAddressLine1__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    required message-when-value-missing="Organization Address Line 1 is required"
+                    message-when-pattern-mismatch="Please enter a valid address"
+                    data-field="OrganizationAddressLine1__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="OrganizationAddressLine2__c" label="Organization Address Line 2"
+                    value={formData.OrganizationAddressLine2__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    data-field="OrganizationAddressLine2__c">
+                </lightning-input>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="OrganizationCity__c" label="Organization City"
+                    value={formData.OrganizationCity__c} onchange={handleInputChange} onblur={handleFieldBlur} required
+                    pattern="^[a-zA-Z\s\-'\.]+$" message-when-value-missing="Organization City is required"
+                    message-when-pattern-mismatch="Please enter a valid city name" data-field="OrganizationCity__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="OrganizationState__c" label="Organization State"
+                    value={formData.OrganizationState__c} options={stateOptions} onchange={handleInputChange}
+                    onblur={handleFieldBlur} required message-when-value-missing="Organization State is required"
+                    data-field="OrganizationState__c">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-gutters slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input name="OrganizationZip__c" label="Organization ZIP Code"
+                    value={formData.OrganizationZip__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    maxlength="10" required pattern="^\d{5}(-\d{4})?$"
+                    message-when-value-missing="Organization ZIP Code is required"
+                    message-when-pattern-mismatch="Please enter a valid ZIP code (12345 or 12345-6789)"
+                    data-field="OrganizationZip__c">
+                </lightning-input>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Point of Contact -->
+    <div class="slds-card__body slds-card__body_inner">
+        <h2 class="slds-text-heading_medium slds-m-bottom_medium">Application Point of Contact</h2>
+
+        <h3 class="slds-text-heading_small slds-m-bottom_small">Program Manager</h3>
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-3">
+                <lightning-input name="Program_Manager_Name__c" label="Program Manager Name"
+                    value={formData.Program_Manager_Name__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    required pattern="^[a-zA-Z\s\-'\.]+$" message-when-value-missing="Program Manager Name is required"
+                    message-when-pattern-mismatch="Please enter a valid name" data-field="Program_Manager_Name__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-3">
+                <lightning-input name="Program_Manager_Email__c" label="Program Manager Email" type="email"
+                    value={formData.Program_Manager_Email__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    required message-when-value-missing="Program Manager Email is required"
+                    message-when-type-mismatch="Please enter a valid email address"
+                    data-field="Program_Manager_Email__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-3">
+                <lightning-input name="Program_Manager_Phone_Number__c" label="Program Manager Phone" type="tel"
+                    value={formData.Program_Manager_Phone_Number__c} onchange={handleInputChange}
+                    onblur={handleFieldBlur} pattern="^\(\d{3}\)\s\d{3}-\d{4}$"
+                    message-when-pattern-mismatch="Please enter phone in format (123) 456-7890"
+                    data-field="Program_Manager_Phone_Number__c">
+                </lightning-input>
+            </div>
+        </div>
+
+        <h3 class="slds-text-heading_small slds-m-top_large slds-m-bottom_small">Fiscal Manager</h3>
+        <div class="slds-grid slds-gutters">
+            <div class="slds-col slds-size_1-of-3">
+                <lightning-input name="Fiscal_Manager_Title__c" label="Fiscal Manager Title"
+                    value={formData.Fiscal_Manager_Title__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    data-field="Fiscal_Manager_Title__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-3">
+                <lightning-input name="Fiscal_Manager_Email__c" label="Fiscal Manager Email" type="email"
+                    value={formData.Fiscal_Manager_Email__c} onchange={handleInputChange} onblur={handleFieldBlur}
+                    required message-when-value-missing="Fiscal Manager Email is required"
+                    message-when-type-mismatch="Please enter a valid email address"
+                    data-field="Fiscal_Manager_Email__c">
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-size_1-of-3">
+                <lightning-input name="Fiscal_Manager_Phone_Number__c" label="Fiscal Manager Phone" type="tel"
+                    value={formData.Fiscal_Manager_Phone_Number__c} onchange={handleInputChange}
+                    onblur={handleFieldBlur} placeholder="(555) 123-4567" pattern="^\(\d{3}\)\s\d{3}-\d{4}$"
+                    message-when-pattern-mismatch="Please enter phone in format (123) 456-7890"
+                    data-field="Fiscal_Manager_Phone_Number__c">
+                </lightning-input>
+            </div>
+        </div>
+    </div>
+</template>

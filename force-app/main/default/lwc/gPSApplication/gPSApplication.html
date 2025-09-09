@@ -1,0 +1,51 @@
+<template>
+    <div class="slds-var-m-around_medium">
+        <template if:true={isLoading}>
+            <div class="slds-text-align_center">
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:true={applicationOpen}>
+                <template if:true={isEligibleToApply}>
+                    <c-g-p-s-application-form></c-g-p-s-application-form>
+                </template>
+                
+                <template if:false={isEligibleToApply}>
+                    <div class="slds-text-align_center slds-var-p-around_large">
+                        <lightning-icon icon-name="utility:success" size="large" variant="success"
+                            class="slds-var-m-bottom_medium">
+                        </lightning-icon>
+
+                        <h2 class="slds-text-heading_large slds-var-m-bottom_medium">
+                            Application Already Submitted
+                        </h2>
+                        <p class="slds-text-body_regular slds-var-m-bottom_large">
+                            You have already submitted an application for this GPS program cycle.
+                        </p>
+                        <lightning-button label="Refresh Status" variant="brand" onclick={refreshStatus}>
+                        </lightning-button>
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={applicationOpen}>
+                <div class="slds-text-align_center slds-var-p-around_large">
+                    <lightning-icon icon-name="utility:info" size="large" variant="warning"
+                        class="slds-var-m-bottom_medium">
+                    </lightning-icon>
+
+                    <h2 class="slds-text-heading_large slds-var-m-bottom_medium">
+                        Application Currently Closed
+                    </h2>
+                    <p class="slds-text-body_regular slds-var-m-bottom_large">
+                        The GPS program application is currently closed.
+                    </p>
+                    <lightning-button label="Refresh Status" variant="brand" onclick={refreshStatus}>
+                    </lightning-button>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

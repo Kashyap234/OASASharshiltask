@@ -1,0 +1,130 @@
+<template>
+    <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01"
+        class="slds-modal slds-fade-in-open slds-modal_large">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Application Preview</h1>
+            </header>
+
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Application Information</h3>
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <template for:each={applicationDetails} for:item="detail">
+                            <div key={detail.id} class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                                <span class="slds-form-element__label">{detail.label}</span>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{detail.value}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium" if:true={hasUploadedFiles}>
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Uploaded Files</h3>
+                    <ul>
+                        <template for:each={uploadedFiles} for:item="file">
+                            <!-- SHow in one Row -->
+                            
+                            <li key={file.documentId}>{file.name}</li>
+                            <lightning-button key={file.documentId} variant="brand" label="View" title="View File" onclick={handleViewFile}
+                                data-id={file.documentId} class="slds-m-left_x-small">
+                            </lightning-button>
+                        </template>
+                    </ul>
+                </div>
+
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium" if:true={hasPartners}>
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Partners ({partners.length})</h3>
+                    <template for:each={processedPartners} for:item="partner">
+                        <div key={partner.Id} class="slds-box slds-m-bottom_medium slds-theme_default">
+                            <h4 class="slds-text-heading_medium slds-m-bottom_x-small">Partner #{partner.Id}: {partner.Partner_Name__c}</h4>
+                            
+                            <div class="slds-p-around_small">
+                                <p><strong>Geographic Area:</strong> {partner.Geographic_Area_Population_Poverty__c}</p>
+                                <p><strong>Current Budget/Funding:</strong> {partner.Describe_Current_Budget_and_Funding_Sour__c}</p>
+                                <p><strong>Existing Efforts:</strong> {partner.Outline_Existing_Efforts_and_New_Expansi__c}</p>
+                            </div>
+
+                            <div class="slds-p-around_small slds-border_top">
+                                <template if:true={partner.hasCoreStrategies}>
+                                    <h5 class="slds-text-heading_small">Core Strategies</h5>
+                                    <ul><template for:each={partner.strategiesData.selectedCoreStrategies} for:item="s">
+                                        <li key={s}>{s}</li></template></ul>
+                                </template>
+                                <template if:true={partner.hasCoreAbatements}>
+                                    <h5 class="slds-text-heading_small slds-m-top_small">Core Abatements</h5>
+                                    <ul><template for:each={partner.strategiesData.selectedCoreAbatements} for:item="s">
+                                        <li key={s}>{s}</li></template></ul>
+                                </template>
+                                <template if:true={partner.hasApprovedUses}>
+                                    <h5 class="slds-text-heading_small slds-m-top_small">Approved Uses</h5>
+                                    <ul><template for:each={partner.strategiesData.selectedApprovedUses} for:item="s">
+                                        <li key={s}>{s}</li></template></ul>
+                                </template>
+                                <template if:true={partner.hasApprovedAbatements}>
+                                    <h5 class="slds-text-heading_small slds-m-top_small">Approved Abatements</h5>
+                                    <ul><template for:each={partner.strategiesData.selectedApprovedAbatements} for:item="s">
+                                        <li key={s}>{s}</li></template></ul>
+                                </template>
+                            </div>
+                            
+                            <template for:each={partner.strategyDetails} for:item="strategy">
+                                <div key={strategy.name} class="slds-box slds-m-top_medium slds-theme_shade">
+                                    <h5 class="slds-text-heading_small slds-p-bottom_small slds-border_bottom">{strategy.name}</h5>
+                                    <div class="slds-grid slds-wrap slds-p-top_small">
+                                        <p class="slds-col slds-size_1-of-2"><strong>Budget Amount:</strong> <lightning-formatted-number value={strategy.details.budgetAmount} format-style="currency" currency-code="USD"></lightning-formatted-number></p>
+                                        <p class="slds-col slds-size_1-of-2"><strong>Initial/Continuation:</strong> {strategy.details.isInitialContinuation}</p>
+                                        <p class="slds-col slds-size_1-of-1 slds-m-top_small"><strong>Implementation Plan:</strong> {strategy.details.implementationPlan}</p>
+                                        <p class="slds-col slds-size_1-of-1 slds-m-top_x-small"><strong>Budget Narrative:</strong> {strategy.details.budgetNarrative}</p>
+                                    </div>
+
+                                    <template if:true={strategy.hasPersonnel}>
+                                        <h6 class="slds-m-top_medium">Personnel</h6>
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                                            <thead><tr><th>Name</th><th>Position</th><th>Salary</th><th>Effort</th><th>Total</th></tr></thead>
+                                            <tbody><template for:each={strategy.personnel} for:item="p"><tr key={p.name}>
+                                                <td>{p.name}</td><td>{p.position}</td>
+                                                <td><lightning-formatted-number value={p.salary} format-style="currency" currency-code="USD"></lightning-formatted-number></td>
+                                                <td>{p.effort}</td>
+                                                <td><lightning-formatted-number value={p.total} format-style="currency" currency-code="USD"></lightning-formatted-number></td>
+                                            </tr></template></tbody>
+                                        </table>
+                                    </template>
+
+                                    <template if:true={strategy.hasBudget}>
+                                        <h6 class="slds-m-top_medium">Budget Line Items</h6>
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                                            <thead><tr><th>Item</th><th>Purpose</th><th>Calculation</th><th>Total</th></tr></thead>
+                                            <tbody><template for:each={strategy.budget} for:item="b"><tr key={b.item}>
+                                                <td>{b.item}</td><td>{b.purpose}</td><td>{b.calculation}</td>
+                                                <td><lightning-formatted-number value={b.total} format-style="currency" currency-code="USD"></lightning-formatted-number></td>
+                                            </tr></template></tbody>
+                                        </table>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Overall Budget &amp; Certification</h3>
+                    <p><strong>Total Project Budget:</strong> <lightning-formatted-number value={formData.Total_Project_Budget__c} format-style="currency" currency-code="USD"></lightning-formatted-number></p>
+                    <p><strong>Minus Estimated Carry Forward:</strong> <lightning-formatted-number value={formData.Minus_Estimated_Carry_Forward_Amount__c} format-style="currency" currency-code="USD"></lightning-formatted-number></p>
+                    <p><strong>Minus Estimated Interest Earned:</strong> <lightning-formatted-number value={formData.Minus_Estimated_Interest_Earned__c} format-style="currency" currency-code="USD"></lightning-formatted-number></p>
+                    <p class="slds-text-heading_small slds-m-top_small"><strong>Total Amount Requested:</strong> <lightning-formatted-number value={totalAmountRequested} format-style="currency" currency-code="USD"></lightning-formatted-number></p>
+                    <hr/>
+                    <p><strong>Electronic Signature:</strong> {formData.Electronic_Signature__c}</p>
+                    <p><strong>Date:</strong> <lightning-formatted-date-time value={formData.Date__c} year="numeric" month="long" day="2-digit"></lightning-formatted-date-time></p>
+                </div>
+            </div>
+
+            <footer class="slds-modal__footer">
+                <lightning-button label="Close" title="Close" onclick={handleClose}></lightning-button>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+</template>
