@@ -3,8 +3,9 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-// Updated import to use the new method that handles duplicate deletion
+// Updated imports to include the new update method
 import createReferralFormAndDeleteDuplicate from '@salesforce/apex/ReferralFormService.createReferralFormAndDeleteDuplicate';
+import updateExistingReferralFormAndDeleteDuplicate from '@salesforce/apex/ReferralFormService.updateExistingReferralFormAndDeleteDuplicate';
 
 // Use schema imports for robustness and to prevent typos
 import DUPLICATE_REFERRAL_OBJECT from '@salesforce/schema/Duplicate_Referral__c';
@@ -229,7 +230,7 @@ export default class ReferralDuplicateViewer extends NavigationMixin(LightningEl
         this.dispatchEvent(new CustomEvent('cancel'));
     }
 
-    // Updated method to create new record and automatically delete duplicate
+    // Method to create new record and automatically delete duplicate
     handleContinueNew() {
         this.isLoading = true;
         
@@ -251,131 +252,154 @@ export default class ReferralDuplicateViewer extends NavigationMixin(LightningEl
         // Convert back to JSON
         const modifiedJsonData = JSON.stringify(parsedData);
         
-        // Use the new method that creates record and deletes duplicate
+        // Use the method that creates record and deletes duplicate
         createReferralFormAndDeleteDuplicate({ 
             jsonData: modifiedJsonData, 
             duplicateRecordId: this.recordId 
         })
-            .then(result => {
-                console.log('Raw API Response:', result);
-                console.log('API Response Type:', typeof result);
-                console.log('API Response Keys:', Object.keys(result || {}));
-                console.log('API Response JSON:', JSON.stringify(result, null, 2));
-                
-                // Check if result is null, undefined, or empty
-                if (!result) {
-                    throw new Error('API returned null or undefined response');
-                }
-                
-                // Check if result is an empty object
-                if (typeof result === 'object' && Object.keys(result).length === 0) {
-                    throw new Error('API returned empty object response. Check Salesforce Debug Logs for server-side errors.');
-                }
-                
-                // Check for success property
-                if (result.hasOwnProperty('success')) {
-                    if (result.success) {
-                        // Create success message based on what was accomplished
-                        let successMessage = result.message || 'Referral form created successfully';
-                        
-                        // Add information about duplicate deletion
-                        if (result.duplicateDeleted) {
-                            successMessage += ' The duplicate record has been automatically removed.';
-                        }
-                        
-                        this.showToast('Success', successMessage, 'success');
-                        
-                        // Dispatch event with all the details
-                        this.dispatchEvent(new CustomEvent('newrecordcreated', {
-                            detail: { 
-                                newRecordId: result.referralFormId,
-                                studentDataId: result.studentDataId,
-                                schoolId: result.schoolId,
-                                processingTime: result.processingTime,
-                                duplicateDeleted: result.duplicateDeleted,
-                                deletedDuplicateId: result.deletedDuplicateId
-                            }
-                        }));
-                    } else {
-                        // Handle unsuccessful response
-                        const errorMessage = result.errors && result.errors.length > 0 
-                            ? result.errors.join(', ') 
-                            : result.message || 'Unknown error occurred during processing';
-                        
-                        this.showToast('Error', errorMessage, 'error');
-                        
-                        // Log warnings if any
-                        if (result.warnings && result.warnings.length > 0) {
-                            console.warn('Processing Warnings:', result.warnings);
-                            
-                            // Show warnings in toast if they contain important info about duplicate deletion
-                            const duplicateWarnings = result.warnings.filter(warning => 
-                                warning.toLowerCase().includes('duplicate') && 
-                                warning.toLowerCase().includes('delete')
-                            );
-                            
-                            if (duplicateWarnings.length > 0) {
-                                this.showToast('Warning', duplicateWarnings.join(' '), 'warning');
-                            }
-                        }
-                    }
-                } else {
-                    // Result doesn't have expected structure
-                    console.error('Unexpected response structure:', result);
-                    throw new Error('API response missing expected properties. Check Salesforce Debug Logs for server-side errors.');
-                }
-            })
-            .catch(error => {
-                console.error('Apex method error details:', {
-                    message: error.message,
-                    body: error.body,
-                    stack: error.stack,
-                    name: error.name
-                });
-                
-                let errorMessage = 'Error creating new referral record: ';
-                
-                // Handle different types of errors
-                if (error.body) {
-                    if (error.body.message) {
-                        errorMessage += error.body.message;
-                    } else if (error.body.pageErrors && error.body.pageErrors.length > 0) {
-                        errorMessage += error.body.pageErrors[0].message;
-                    } else if (error.body.fieldErrors) {
-                        const fieldErrorMessages = [];
-                        Object.keys(error.body.fieldErrors).forEach(field => {
-                            error.body.fieldErrors[field].forEach(fieldError => {
-                                fieldErrorMessages.push(`${field}: ${fieldError.message}`);
-                            });
-                        });
-                        errorMessage += fieldErrorMessages.join(', ');
-                    } else {
-                        errorMessage += JSON.stringify(error.body);
-                    }
-                } else if (error.message) {
-                    errorMessage += error.message;
-                } else {
-                    errorMessage += 'Unknown error occurred. Check browser console and Salesforce debug logs.';
-                }
-                
-                this.handleError(errorMessage);
-            })
+            .then(result => this.handleApiResponse(result, 'created'))
+            .catch(error => this.handleApiError(error, 'creating new'))
             .finally(() => {
                 this.isLoading = false;
             });
     }
 
+    // NEW: Method to update existing record and delete duplicate
     handleUpdateExisting() {
-        this.dispatchEvent(new CustomEvent('updateexisting', {
-            detail: {
-                recordIdToUpdate: this.duplicateRecordId,
-                newData: this.currentData,
-                rawJsonData: this.rawJsonData // Include raw JSON in case parent needs it
-            }
-        }));
+        this.isLoading = true;
+        
+        console.log('Starting updateExistingReferralFormAndDeleteDuplicate');
+        console.log('Existing referral form ID:', this.duplicateRecordId);
+        console.log('JSON data for update:', this.rawJsonData);
+        console.log('Duplicate record ID to delete:', this.recordId);
+        
+        // Use the new method that updates existing record and deletes duplicate
+        updateExistingReferralFormAndDeleteDuplicate({ 
+            referralFormId: this.duplicateRecordId,
+            jsonData: this.rawJsonData, 
+            duplicateRecordId: this.recordId 
+        })
+            .then(result => this.handleApiResponse(result, 'updated'))
+            .catch(error => this.handleApiError(error, 'updating existing'))
+            .finally(() => {
+                this.isLoading = false;
+            });
     }
 
     // ### UTILITY FUNCTIONS ###
+
+    // Unified API response handler
+    handleApiResponse(result, actionType) {
+        console.log('Raw API Response:', result);
+        console.log('API Response Type:', typeof result);
+        console.log('API Response Keys:', Object.keys(result || {}));
+        console.log('API Response JSON:', JSON.stringify(result, null, 2));
+        
+        // Check if result is null, undefined, or empty
+        if (!result) {
+            throw new Error('API returned null or undefined response');
+        }
+        
+        // Check if result is an empty object
+        if (typeof result === 'object' && Object.keys(result).length === 0) {
+            throw new Error('API returned empty object response. Check Salesforce Debug Logs for server-side errors.');
+        }
+        
+        // Check for success property
+        if (result.hasOwnProperty('success')) {
+            if (result.success) {
+                // Create success message based on what was accomplished
+                let successMessage = result.message || `Referral form ${actionType} successfully`;
+                
+                // Add information about duplicate deletion
+                if (result.duplicateDeleted) {
+                    successMessage += ' The duplicate record has been automatically removed.';
+                }
+                
+                this.showToast('Success', successMessage, 'success');
+                
+                // Dispatch appropriate event based on action type
+                const eventDetail = { 
+                    referralFormId: result.referralFormId,
+                    studentDataId: result.studentDataId,
+                    schoolId: result.schoolId,
+                    processingTime: result.processingTime,
+                    duplicateDeleted: result.duplicateDeleted,
+                    deletedDuplicateId: result.deletedDuplicateId,
+                    actionPerformed: actionType
+                };
+
+                if (actionType === 'created') {
+                    this.dispatchEvent(new CustomEvent('newrecordcreated', { detail: eventDetail }));
+                } else if (actionType === 'updated') {
+                    this.dispatchEvent(new CustomEvent('recordupdated', { detail: eventDetail }));
+                }
+            } else {
+                // Handle unsuccessful response
+                const errorMessage = result.errors && result.errors.length > 0 
+                    ? result.errors.join(', ') 
+                    : result.message || 'Unknown error occurred during processing';
+                
+                this.showToast('Error', errorMessage, 'error');
+                
+                // Log warnings if any
+                if (result.warnings && result.warnings.length > 0) {
+                    console.warn('Processing Warnings:', result.warnings);
+                    
+                    // Show warnings in toast if they contain important info about duplicate deletion
+                    const duplicateWarnings = result.warnings.filter(warning => 
+                        warning.toLowerCase().includes('duplicate') && 
+                        warning.toLowerCase().includes('delete')
+                    );
+                    
+                    if (duplicateWarnings.length > 0) {
+                        this.showToast('Warning', duplicateWarnings.join(' '), 'warning');
+                    }
+                }
+            }
+        } else {
+            // Result doesn't have expected structure
+            console.error('Unexpected response structure:', result);
+            throw new Error('API response missing expected properties. Check Salesforce Debug Logs for server-side errors.');
+        }
+    }
+
+    // Unified API error handler
+    handleApiError(error, actionType) {
+        console.error(`Apex method error details for ${actionType}:`, {
+            message: error.message,
+            body: error.body,
+            stack: error.stack,
+            name: error.name
+        });
+        
+        let errorMessage = `Error ${actionType} referral record: `;
+        
+        // Handle different types of errors
+        if (error.body) {
+            if (error.body.message) {
+                errorMessage += error.body.message;
+            } else if (error.body.pageErrors && error.body.pageErrors.length > 0) {
+                errorMessage += error.body.pageErrors[0].message;
+            } else if (error.body.fieldErrors) {
+                const fieldErrorMessages = [];
+                Object.keys(error.body.fieldErrors).forEach(field => {
+                    error.body.fieldErrors[field].forEach(fieldError => {
+                        fieldErrorMessages.push(`${field}: ${fieldError.message}`);
+                    });
+                });
+                errorMessage += fieldErrorMessages.join(', ');
+            } else {
+                errorMessage += JSON.stringify(error.body);
+            }
+        } else if (error.message) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Unknown error occurred. Check browser console and Salesforce debug logs.';
+        }
+        
+        this.handleError(errorMessage);
+    }
 
     formatDate(dateString) {
         if (!dateString) return 'N/A';

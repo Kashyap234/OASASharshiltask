@@ -119,6 +119,206 @@ global with sharing class ReferralFormService {
         return response.toMap();
     }
     
+    // NEW: Method to update existing referral form and delete duplicate
+    @AuraEnabled
+    public static Map<String, Object> updateExistingReferralFormAndDeleteDuplicate(String referralFormId, String jsonData, String duplicateRecordId) {
+        FormSubmissionResponse response = new FormSubmissionResponse();
+        DateTime startTime = DateTime.now();
+        
+        try {
+            System.debug('Starting update of existing referral form: ' + referralFormId);
+            System.debug('JSON Data for update: ' + jsonData);
+            System.debug('Duplicate record to delete: ' + duplicateRecordId);
+            
+            if (String.isBlank(jsonData)) {
+                throw new ReferralFormException('Empty JSON data provided for update');
+            }
+            
+            if (String.isBlank(referralFormId)) {
+                throw new ReferralFormException('Referral Form ID is required for update');
+            }
+            
+            Map<String, Object> formData;
+            try {
+                formData = (Map<String, Object>) JSON.deserializeUntyped(jsonData);
+            } catch (Exception e) {
+                throw new ReferralFormException('Invalid JSON format: ' + e.getMessage());
+            }
+            
+            Map<String, Object> referralFormDataMap = (Map<String, Object>) formData.get('referralFormData');
+            
+            if (referralFormDataMap == null || referralFormDataMap.isEmpty()) {
+                throw new ReferralFormException('No referral form data provided for update');
+            }
+            
+            // Get the existing referral form record
+            List<Referral_Form__c> existingRecords = [
+                SELECT Id, What_type_of_referral_is_this__c, Student_Data__c, School__c, RecordTypeId
+                FROM Referral_Form__c 
+                WHERE Id = :referralFormId 
+                LIMIT 1
+            ];
+            
+            if (existingRecords.isEmpty()) {
+                throw new ReferralFormException('Referral Form record not found with ID: ' + referralFormId);
+            }
+            
+            Referral_Form__c existingReferralForm = existingRecords[0];
+            String referralType = (String) referralFormDataMap.get('What_type_of_referral_is_this__c');
+            
+            // Handle different referral types for updates
+            if ('Student or Family'.equals(referralType)) {
+                // Handle Student record type updates
+                String schoolId = handleSchoolLookupOrCreation(referralFormDataMap, response);
+                String studentDataId = handleStudentDataLookupOrCreation(referralFormDataMap, response, schoolId);
+                
+                if (studentDataId != null) {
+                    referralFormDataMap.put('Student_Data__c', studentDataId);
+                    response.studentDataId = studentDataId;
+                }
+            } else if ('Individual Adult and no students'.equals(referralType)) {
+                // Handle Adult record type updates
+                String schoolId = handleSchoolLookupOrCreation(referralFormDataMap, response);
+                if (schoolId != null) {
+                    referralFormDataMap.put('School__c', schoolId);
+                    response.schoolId = schoolId;
+                }
+            }
+            
+            // Update the existing referral form record
+            Integer fieldsUpdated = updateReferralFormRecord(existingReferralForm, referralFormDataMap, response);
+            System.debug('Updated ' + fieldsUpdated + ' fields on existing Referral Form: ' + existingReferralForm.Id);
+            
+            update existingReferralForm;
+            
+            response.referralFormId = existingReferralForm.Id;
+            response.success = true;
+            response.message = 'Successfully updated existing Referral Form record';
+            
+            // Delete the duplicate record if successful and duplicate record ID provided
+            if (response.success && String.isNotBlank(duplicateRecordId)) {
+                try {
+                    Duplicate_Referral__c duplicateToDelete = new Duplicate_Referral__c(Id = duplicateRecordId);
+                    delete duplicateToDelete;
+                    
+                    response.duplicateDeleted = true;
+                    response.deletedDuplicateId = duplicateRecordId;
+                    response.message += ' Duplicate record has been automatically deleted.';
+                    response.warnings.add('Duplicate Referral record (' + duplicateRecordId + ') was automatically deleted after updating existing record.');
+                    
+                    System.debug('Successfully deleted Duplicate_Referral__c record: ' + duplicateRecordId);
+                    
+                } catch (DmlException e) {
+                    // Don't fail the entire operation if duplicate deletion fails
+                    response.warnings.add('Warning: Could not delete duplicate record (' + duplicateRecordId + '): ' + e.getDmlMessage(0));
+                    System.debug('Failed to delete Duplicate_Referral__c record: ' + e.getDmlMessage(0));
+                } catch (Exception e) {
+                    // Don't fail the entire operation if duplicate deletion fails
+                    response.warnings.add('Warning: Unexpected error deleting duplicate record: ' + e.getMessage());
+                    System.debug('Unexpected error deleting Duplicate_Referral__c record: ' + e.getMessage());
+                }
+            }
+            
+        } catch (ReferralFormException e) {
+            response.success = false;
+            response.message = e.getMessage();
+            response.errors.add(e.getMessage());
+            System.debug('ReferralForm Update Error: ' + e.getMessage());
+        } catch (DmlException e) {
+            response.success = false;
+            response.message = 'Database error occurred during update';
+            for (Integer i = 0; i < e.getNumDml(); i++) {
+                String dmlError = 'Record ' + i + ': ' + e.getDmlMessage(i);
+                response.errors.add(dmlError);
+                System.debug('DML Update Error: ' + dmlError);
+            }
+        } catch (Exception e) {
+            response.success = false;
+            response.message = 'An unexpected error occurred during update: ' + e.getMessage();
+            response.errors.add(e.getMessage());
+            System.debug('General Update Error: ' + e.getMessage());
+            System.debug('Stack Trace: ' + e.getStackTraceString());
+        }
+        
+        DateTime endTime = DateTime.now();
+        Long processingTimeMs = endTime.getTime() - startTime.getTime();
+        response.processingTime = processingTimeMs + 'ms';
+        
+        System.debug('=== Update processing completed in ' + response.processingTime + ' ===');
+        System.debug('Update Response: ' + JSON.serialize(response));
+        
+        return response.toMap();
+    }
+    
+    // Helper method to update referral form record fields
+    private static Integer updateReferralFormRecord(Referral_Form__c existingRecord, Map<String, Object> referralFormDataMap, FormSubmissionResponse response) {
+        // Remove lookup-related fields that are handled separately
+        cleanupFormDataForReferralForm(referralFormDataMap);
+        
+        // Use the existing setObjectFields method but for updates
+        Integer fieldsUpdated = setObjectFieldsForUpdate(existingRecord, referralFormDataMap, 'Referral_Form__c', response);
+        
+        return fieldsUpdated;
+    }
+    
+    // Modified version of setObjectFields for updates
+    private static Integer setObjectFieldsForUpdate(SObject obj, Map<String, Object> dataMap, String objectType, FormSubmissionResponse response) {
+        if (dataMap == null || dataMap.isEmpty()) return 0;
+        
+        Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectType);
+        Map<String, Schema.SObjectField> fieldMap = objType.getDescribe().fields.getMap();
+        
+        Integer fieldsUpdatedCount = 0;
+        List<String> skippedFields = new List<String>();
+        
+        for (String fieldName : dataMap.keySet()) {
+            Object fieldValue = dataMap.get(fieldName);
+            
+            // Skip null or empty values for updates
+            if (fieldValue == null || String.valueOf(fieldValue).trim() == '') {
+                continue;
+            }
+            
+            Schema.SObjectField fieldToken = fieldMap.get(fieldName);
+            if (fieldToken == null) {
+                skippedFields.add(fieldName + ' (field not found)');
+                System.debug('Field not found on ' + objectType + ': ' + fieldName);
+                continue;
+            }
+            
+            Schema.DescribeFieldResult fieldDescribe = fieldToken.getDescribe();
+            
+            // Check if field is updateable
+            if (!fieldDescribe.isUpdateable()) {
+                skippedFields.add(fieldName + ' (not updateable)');
+                System.debug('Field not updateable on ' + objectType + ': ' + fieldName);
+                continue;
+            }
+            
+            Schema.DisplayType fieldType = fieldDescribe.getType();
+            
+            try {
+                Object convertedValue = convertValueByType(fieldValue, fieldType, fieldDescribe);
+                
+                if (convertedValue != null) {
+                    obj.put(fieldName, convertedValue);
+                    fieldsUpdatedCount++;
+                    System.debug('Updated ' + objectType + '.' + fieldName + ' = ' + convertedValue);
+                }
+                
+            } catch (Exception e) {
+                skippedFields.add(fieldName + ' (conversion error: ' + e.getMessage() + ')');
+                System.debug('Error updating field ' + objectType + '.' + fieldName + ': ' + e.getMessage());
+            }
+        }
+        
+        if (!skippedFields.isEmpty()) {
+            response.warnings.add(objectType + ' fields skipped during update: ' + String.join(skippedFields, ', '));
+        }
+        
+        return fieldsUpdatedCount;
+    }
+    
     // Internal method that does the actual work and returns FormSubmissionResponse
     // Updated createReferralFormFromJsonInternal method in ReferralFormService
     private static FormSubmissionResponse createReferralFormFromJsonInternal(String jsonData) {
